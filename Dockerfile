@@ -4,6 +4,7 @@ MAINTAINER NyaMisty
 
 ARG PYTHON_VER=3.9.6
 ARG USE_IDAPYSWITCH=1
+ARG DOCKER_PASSWORD=DockerWineIDA
 
 ADD . /root/.wine64/drive_c/IDA
 
@@ -14,6 +15,7 @@ ENV WINEARCH win64
 ENV WINEPREFIX /root/.wine64
 
 RUN --security=insecure true \
+    && echo "root:$DOCKER_PASSWORD" | chpasswd \
     && (entrypoint true; sleep 0.5; wineboot --init) \
     && (entrypoint true; sleep 0.5; winetricks -q win10) \
     && while pgrep wineserver >/dev/null; do echo "Waiting for wineserver"; sleep 1; done \
@@ -25,7 +27,7 @@ RUN --security=insecure true \
            && (wine cmd /c python*.* /quiet /log python_inst.log InstallAllUsers=1 PrependPath=1; ret=$?; cat python_inst.log; rm python_inst.log; exit $ret); \
        fi \
     && while pgrep wineserver >/dev/null; do echo "Waiting for wineserver"; sleep 1; done \
-    && if [ "$USE_IDAPYSWITCH" = "1" ]; then (echo 0 | wine 'C:\IDA\idapyswitch.exe'); fi \
+    && if [ "$USE_IDAPYSWITCH" = "1" ]; then (echo 0 | wine 'C:\IDA\idapyswitch.exe'; wine cmd /c reg delete 'HKCU\Software\Hex-Rays\IDA' /v Python3TargetDLL /f); fi \
     && while pgrep wineserver >/dev/null; do echo "Waiting for wineserver"; sleep 1; done \
     && winetricks -q win7 \
     && while pgrep wineserver >/dev/null; do echo "Waiting for wineserver"; sleep 1; done \
