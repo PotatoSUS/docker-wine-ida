@@ -7,16 +7,20 @@ ARG USE_IDAPYSWITCH=1
 ARG IDA_LICENSE_NAME=docker-wine-ida
 ARG DOCKER_PASSWORD=DockerWineIDA
 
-ADD . /root/.wine64/drive_c/IDA
-
 SHELL ["/bin/bash", "-c"]
 
 WORKDIR /root
 ENV WINEARCH win64
 ENV WINEPREFIX /root/.wine64
 
+# Configure profile for Wine
+RUN true \
+    && echo "export WINEARCH=win64; export WINEPREFIX=/root/.wine64" >> /etc/bash.bashrc \
+    && echo "export WINEARCH=win64; export WINEPREFIX=/root/.wine64" >> /etc/profile \
+    && echo "root:$DOCKER_PASSWORD" | chpasswd
+
+# Install Python first
 RUN --security=insecure true \
-    && echo "root:$DOCKER_PASSWORD" | chpasswd \
     && (entrypoint true; sleep 0.5; wineboot --init) \
     && (entrypoint true; sleep 0.5; winetricks -q win10) \
     && while pgrep wineserver >/dev/null; do echo "Waiting for wineserver"; sleep 1; done \
@@ -28,9 +32,14 @@ RUN --security=insecure true \
            && (wine cmd /c python*.* /quiet /log python_inst.log InstallAllUsers=1 PrependPath=1; ret=$?; cat python_inst.log; rm python_inst.log; exit $ret); \
        fi \
     && while pgrep wineserver >/dev/null; do echo "Waiting for wineserver"; sleep 1; done \
-    && if [ "$USE_IDAPYSWITCH" = "1" ]; then (echo 0 | wine 'C:\IDA\idapyswitch.exe'; wine cmd /c reg delete 'HKCU\Software\Hex-Rays\IDA' /v Python3TargetDLL /f); fi \
-    && wine cmd /c reg add 'HKCU\Software\Hex-Rays\IDA' /v "License $IDA_LICENSE_NAME" /t REG_DWORD /d 1 /f \
-    && while pgrep wineserver >/dev/null; do echo "Waiting for wineserver"; sleep 1; done \
     && winetricks -q win7 \
     && while pgrep wineserver >/dev/null; do echo "Waiting for wineserver"; sleep 1; done \
     && rm -rf $HOME/.cache/winetricks && rm python*
+
+
+# Configure IDA
+ADD . /root/.wine64/drive_c/IDA
+RUN true \
+    && if [ "$USE_IDAPYSWITCH" = "1" ]; then (echo 0 | wine 'C:\IDA\idapyswitch.exe'; wine cmd /c reg delete 'HKCU\Software\Hex-Rays\IDA' /v Python3TargetDLL /f); fi \
+    && wine cmd /c reg add 'HKCU\Software\Hex-Rays\IDA' /v "License $IDA_LICENSE_NAME" /t REG_DWORD /d 1 /f \
+    && while pgrep wineserver >/dev/null; do echo "Waiting for wineserver"; sleep 1; done
