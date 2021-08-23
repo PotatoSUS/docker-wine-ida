@@ -23,8 +23,13 @@ docker pull nyamisty/docker-wine-ida:7.0
 docker-wine-ida is based on scottyhardy/docker-wine, but without its `./docker-wine` wrapper script, so the usage is in [the manual-running part](https://github.com/scottyhardy/docker-wine#manually-running-with-docker-run-commands)
 
 - Run with Xvfb:
+    - Without mapping dir:
     ```
     docker run --name docker-ida -it nyamisty/docker-wine-ida:7.6sp1 wine C:\\IDA\\ida.exe
+    ```
+    - Map current directory to C:\workspace
+    ```
+    docker run --name docker-ida -v "${PWD}:/root/.wine64/drive_c/workspace" -it nyamisty/docker-wine-ida:7.6sp1 wine C:\\IDA\\ida.exe C:\\workspace\\test.bin
     ```
 
 - Run with X11 forward:
@@ -33,8 +38,13 @@ docker-wine-ida is based on scottyhardy/docker-wine, but without its `./docker-w
     ```
 
 - Run with Xrdp:
+    1. Run the container, and export the RDP port 3389.
     ```
-    docker run --name docker-ida --hostname="$(hostname)" --env="RDP_SERVER=yes" --publish="3389:3389/tcp" -it nyamisty/docker-wine-ida:7.6sp1 wine C:\\IDA\\ida.exe
+    docker run --name docker-ida --hostname="$(hostname)" --env="RDP_SERVER=yes" --publish="3389:3389/tcp" -it nyamisty/docker-wine-ida:7.6sp1
+    ```
+    2. Connect to RDP server and run IDA in the terminal:
+    ```
+    wine C:\\IDA\\ida.exe
     ```
 
 ## Credits
