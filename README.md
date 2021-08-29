@@ -42,9 +42,13 @@ docker-wine-ida is based on scottyhardy/docker-wine, but without its `./docker-w
     ```
     docker run --name docker-ida --hostname="$(hostname)" --env="RDP_SERVER=yes" --publish="3389:3389/tcp" -it nyamisty/docker-wine-ida:7.6sp1
     ```
-    2. Connect to RDP server and run IDA in the terminal:
+    2. Connect to RDP server with credentials:
+    - user: root
+    - pass: DockerWineIDA
+    3. Run IDA in the terminal:
     ```
     wine C:\\IDA\\ida.exe
+    wine C:\\IDA\\ida64.exe
     ```
 
 ## Credits
