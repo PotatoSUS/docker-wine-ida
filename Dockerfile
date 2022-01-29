@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.3-labs
-FROM nyamisty/docker-wine-dotnet
+FROM nyamisty/docker-wine-dotnet:win64-devel
 MAINTAINER NyaMisty
 
 ARG PYTHON_VER=3.9.6
@@ -10,13 +10,9 @@ ARG DOCKER_PASSWORD=DockerWineIDA
 SHELL ["/bin/bash", "-c"]
 
 WORKDIR /root
-ENV WINEARCH win64
-ENV WINEPREFIX /root/.wine64
 
 # Configure profile for Wine
 RUN true \
-    && echo "export WINEARCH=win64; export WINEPREFIX=/root/.wine64" >> /etc/bash.bashrc \
-    && echo "export WINEARCH=win64; export WINEPREFIX=/root/.wine64" >> /etc/profile \
     && echo "root:$DOCKER_PASSWORD" | chpasswd
 
 # Install Python first
@@ -38,7 +34,7 @@ RUN --security=insecure true \
 
 
 # Configure IDA
-ADD . /root/.wine64/drive_c/IDA
+ADD . /root/.wine/drive_c/IDA
 RUN true \
     && if [ "$USE_IDAPYSWITCH" = "1" ]; then (echo 0 | wine 'C:\IDA\idapyswitch.exe'; wine cmd /c reg delete 'HKCU\Software\Hex-Rays\IDA' /v Python3TargetDLL /f); fi \
     && wine cmd /c reg add 'HKCU\Software\Hex-Rays\IDA' /v "License $IDA_LICENSE_NAME" /t REG_DWORD /d 1 /f \
