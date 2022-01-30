@@ -40,6 +40,9 @@ ADD . /root/.wine/drive_c/IDA
 RUN true \
     && if [ "$USE_IDAPYSWITCH" = "1" ]; then (echo 0 | wine 'C:\IDA\idapyswitch.exe'); fi \
     && wine cmd /c reg add 'HKCU\Software\Hex-Rays\IDA' /v "License $IDA_LICENSE_NAME" /t REG_DWORD /d 1 /f \
+    && wine cmd /c reg add 'HKCU\Software\Hex-Rays\IDA' /v "AutoCheckUpdates" /t REG_DWORD /d 0 /f \
+    && wine cmd /c reg add 'HKCU\Software\Hex-Rays\IDA' /v "AutoRequestUpdates" /t REG_DWORD /d 0 /f \
+    && wine cmd /c reg add 'HKCU\Software\Hex-Rays\IDA' /v "AutoUseLumina" /t REG_DWORD /d 0 /f \
     && while pgrep wineserver >/dev/null; do echo "Waiting for wineserver"; sleep 1; done
 
 # Configure ipyida
