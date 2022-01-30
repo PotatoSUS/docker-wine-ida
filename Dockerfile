@@ -36,6 +36,6 @@ RUN --security=insecure true \
 # Configure IDA
 ADD . /root/.wine/drive_c/IDA
 RUN true \
-    && if [ "$USE_IDAPYSWITCH" = "1" ]; then (echo 0 | wine 'C:\IDA\idapyswitch.exe'; wine cmd /c reg delete 'HKCU\Software\Hex-Rays\IDA' /v Python3TargetDLL /f); fi \
+    && if [ "$USE_IDAPYSWITCH" = "1" ]; then (echo 0 | wine 'C:\IDA\idapyswitch.exe'); fi \
     && wine cmd /c reg add 'HKCU\Software\Hex-Rays\IDA' /v "License $IDA_LICENSE_NAME" /t REG_DWORD /d 1 /f \
     && while pgrep wineserver >/dev/null; do echo "Waiting for wineserver"; sleep 1; done

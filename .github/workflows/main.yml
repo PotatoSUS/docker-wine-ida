@@ -51,10 +51,29 @@ jobs:
       - 
         name: Download IDA
         run: |
-            rclone copy -vP gd-priv:ida-leak ida-leak
+            rclone copy -vP gd-priv:ida-leak-wine ida-leak
             cd ida-leak
             find . -name "*.zip" -exec sh -c 'zipname="{}"; mkdir ${zipname%.*}; unzip $zipname -d ${zipname%.*}' \;
-      
+
+      -
+        name: Build & Push IDA 7.7 SP1
+        id: docker_build_77sp1
+        uses: docker/build-push-action@v2
+        with:
+          allow: security.insecure
+          builder: ${{ steps.buildx.outputs.name }}
+          push: true
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          context: ./ida-leak/IDA-7.7.220118-fullpatch-wine
+          file: ./Dockerfile
+          build-args: |
+            PYTHON_VER=3.9.6
+          tags: nyamisty/docker-wine-ida:7.7sp1
+      -
+        name: Image digest
+        run: echo ${{ steps.docker_build_77sp1.outputs.digest }}
+
       -
         name: Build & Push IDA 7.6 SP1
         id: docker_build_76sp1
@@ -65,7 +84,7 @@ jobs:
           push: true
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
-          context: ./ida-leak/IDA-7.6.210427-fullpatch
+          context: ./ida-leak/IDA-7.6.210427-fullpatch-wine
           file: ./Dockerfile
           build-args: |
             PYTHON_VER=3.9.6
@@ -84,7 +103,7 @@ jobs:
           push: true
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
-          context: ./ida-leak/IDA-7.5.201028-fullpatch
+          context: ./ida-leak/IDA-7.5.201028-fullpatch-wine
           file: ./Dockerfile
           build-args: |
             PYTHON_VER=3.8.10
@@ -103,7 +122,7 @@ jobs:
           push: true
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
-          context: ./ida-leak/IDA-7.0.170914-fullpatch
+          context: ./ida-leak/IDA-7.0.170914-fullpatch-wine
           file: ./Dockerfile
           build-args: |
             PYTHON_VER=2.7.18
