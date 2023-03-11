@@ -13,20 +13,20 @@ Prebuilt image also available!
 - IDAPython Jupyter Notebook: (Python3 only)
     - IDAPython integrated as Jupyter Notebook kernel using ipyida. 
     - Notebook server available at port 8080, with password "DockerWineIDA"
-- Prebuilt leaked IDA version available at [nyamisty/docker-wine-ida](https://hub.docker.com/r/nyamisty/docker-wine-ida)
+- Prebuilt leaked IDA version available at [ghcr.io/nyamisty/docker-wine-ida](https://github.com/NyaMisty/docker-wine-ida/pkgs/container/docker-wine-ida)
 
 
 ## Usage
 
 - Select one version to begin with
   ```
-  docker pull nyamisty/docker-wine-ida:7.7sp1
+  docker pull ghcr.io/nyamisty/docker-wine-ida:7.7sp1
   
-  docker pull nyamisty/docker-wine-ida:7.6sp1
+  docker pull ghcr.io/nyamisty/docker-wine-ida:7.6sp1
   
-  docker pull nyamisty/docker-wine-ida:7.5sp3
+  docker pull ghcr.io/nyamisty/docker-wine-ida:7.5sp3
   
-  docker pull nyamisty/docker-wine-ida:7.0
+  docker pull ghcr.io/nyamisty/docker-wine-ida:7.0
   ```
 
 - Basic info
@@ -49,22 +49,22 @@ All these examples spins up a jupyter server. Add command to the end if you want
 - Run with Xvfb
     - Without mapping dir:
     ```
-    docker run --name docker-ida -p 8080:8080 -v "/:/root/host" -it nyamisty/docker-wine-ida:7.6sp1
+    docker run --name docker-ida -p 8080:8080 -v "/:/root/host" -it ghcr.io/nyamisty/docker-wine-ida:7.6sp1
     ```
     - Map current directory to Z:\root\host
     ```
-    docker run --name docker-ida -p 8080:8080 -v "/:/root/host" -it nyamisty/docker-wine-ida:7.6sp1
+    docker run --name docker-ida -p 8080:8080 -v "/:/root/host" -it ghcr.io/nyamisty/docker-wine-ida:7.6sp1
     ```
 
 - Run with X11 forward:
     ```
-    docker run --name docker-ida -p 8080:8080 -v "/:/root/host" --hostname="$(hostname)" --env="USE_XVFB=no" --env="DISPLAY" --volume="${XAUTHORITY:-${HOME}/.Xauthority}:/root/.Xauthority:ro" --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" -it nyamisty/docker-wine-ida:7.6sp1
+    docker run --name docker-ida -p 8080:8080 -v "/:/root/host" --hostname="$(hostname)" --env="USE_XVFB=no" --env="DISPLAY" --volume="${XAUTHORITY:-${HOME}/.Xauthority}:/root/.Xauthority:ro" --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" -it ghcr.io/nyamisty/docker-wine-ida:7.6sp1
     ```
 
 - Run with Xrdp:
     1. Run the container, and export the RDP port 3389.
     ```
-    docker run --name docker-ida -p 8080:8080 -v "/:/root/host" -p "3389:3389/tcp" --hostname="$(hostname)" --env="RDP_SERVER=yes" -it nyamisty/docker-wine-ida:7.6sp1
+    docker run --name docker-ida -p 8080:8080 -v "/:/root/host" -p "3389:3389/tcp" --hostname="$(hostname)" --env="RDP_SERVER=yes" -it ghcr.io/nyamisty/docker-wine-ida:7.6sp1
     ```
     2. Connect to RDP server with credentials:
     - user: root
