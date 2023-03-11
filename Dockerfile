@@ -6,6 +6,7 @@ ARG PYTHON_VER=3.9.6
 ARG USE_IDAPYSWITCH=1
 ARG IDA_LICENSE_NAME=docker-wine-ida
 ARG DOCKER_PASSWORD=DockerWineIDA
+ARG GITHUB_TOKEN=
 
 SHELL ["/bin/bash", "-c"]
 
@@ -47,15 +48,23 @@ RUN true \
 
 # Configure ipyida
 RUN true \
+    && LINKS=$(wget -qO - https://api.github.com/repos/NyaMisty/pyzmq/releases/latest \
+        | grep "browser_download_url.*whl" \
+        | cut -d : -f 2,3 \
+        | tr -d \") \
+    && ([ ! -z "$LINKS" ] || (echo "Failed to get Github Release Links!"; exit 1)) \
+    && (mkdir -p pyzmq_patch && cd pyzmq_patch && echo "$LINKS" | wget -qi -) \
+    && (echo "Downloaded pyzmq_patch:"; ls pyzmq_patch) \
     && wine cmd /c pip install ipykernel \
     && wine cmd /c pip install https://github.com/NyaMisty/ipyida/zipball/master \
     && if [[ $PYTHON_VER == 3* ]]; then ( \
         echo "Pyzmq 22.X introduces EPOLL for windows, causing wine failing, changing version!"; \
         wine pip uninstall --yes pyzmq; \
-        wine pip install --no-index --find-links=https://github.com/NyaMisty/pyzmq/releases pyzmq \
+        (cd pyzmq_patch && wine pip install --no-index --find-links=. pyzmq) \
       ); \
     fi \
-    && wget -O ~/.wine/drive_c/IDA/plugins/ipyida_plugin_stub.py https://raw.githubusercontent.com/NyaMisty/ipyida/master/ipyida/ipyida_plugin_stub.py
+    && wget -O ~/.wine/drive_c/IDA/plugins/ipyida_plugin_stub.py https://raw.githubusercontent.com/NyaMisty/ipyida/master/ipyida/ipyida_plugin_stub.py \
+    && rm -rf pyzmq_patch
 
 # Configure jupyter
 RUN true \

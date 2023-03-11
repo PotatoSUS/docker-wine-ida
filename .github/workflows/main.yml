@@ -4,9 +4,47 @@ on:
   push:
     #tags:
     #  - "*"
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Run the build with shell debugging enabled'
+        required: false
+        default: true
+
 jobs:
 
   build:
+    strategy:
+      matrix:
+        include:
+          #- target: win_x86_32
+          #  os: windows-latest
+          - name: "IDA 7.7 SP1"
+            idadir: IDA-7.7.220118-fullpatch-wine
+            build-args: |
+              PYTHON_VER=3.9.6
+            tag_name: "7.7sp1"
+
+          - name: "IDA 7.6 SP1"
+            idadir: IDA-7.6.210427-fullpatch-wine
+            build-args: |
+              PYTHON_VER=3.9.6
+            tag_name: "7.6sp1"
+
+          - name: "IDA 7.5 SP3"
+            idadir: IDA-7.5.201028-fullpatch-wine
+            build-args: |
+              PYTHON_VER=3.8.10
+            tag_name: "7.5sp3"
+
+          - name: "IDA 7.0"
+            idadir: IDA-7.7.220118-fullpatch-wine
+            build-args: |
+              PYTHON_VER=2.7.18
+              USE_IDAPYSWITCH=0
+            tag_name: "7.0"
+      fail-fast: false
+
     runs-on: ubuntu-latest
     steps:
       - 
@@ -29,6 +67,14 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
+      - 
+        name: Log in to the Container registry
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       -
         name: Install Rclone
         env:
@@ -46,88 +92,58 @@ jobs:
             CONF
             echo $RCLONE_SERVACCOUNT | base64 -d > /tmp/rclone-servaccount.json
             rclone about -vv gd-priv:
+      
       #- name: Setup tmate session
       #  uses: mxschmitt/action-tmate@v3
+      
       - 
         name: Download IDA
         run: |
-            rclone copy -vP gd-priv:ida-leak-wine ida-leak
+            mkdir -p ida-leak
+            rclone copy -vP gd-priv:ida-leak-wine/${{ matrix.idadir }}.zip ida-leak/
             cd ida-leak
             find . -name "*.zip" -exec sh -c 'zipname="{}"; mkdir ${zipname%.*}; unzip $zipname -d ${zipname%.*}' \;
 
       -
-        name: Build & Push IDA 7.7 SP1
-        id: docker_build_77sp1
+        name: Build & Push ${{ matrix.name }}
+        id: docker_build_ida
         uses: docker/build-push-action@v2
         with:
           allow: security.insecure
           builder: ${{ steps.buildx.outputs.name }}
-          push: true
+          #push: true
+          load: true
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
-          context: ./ida-leak/IDA-7.7.220118-fullpatch-wine
+          context: ./ida-leak/${{ matrix.idadir }}
           file: ./Dockerfile
-          build-args: |
-            PYTHON_VER=3.9.6
-          tags: nyamisty/docker-wine-ida:7.7sp1
+          build-args: ${{ matrix.build-args }}
+          tags: ida:${{ matrix.tag_name }}
       -
         name: Image digest
-        run: echo ${{ steps.docker_build_77sp1.outputs.digest }}
+        run: |
+          set -x
+          echo "Image built for ${{ matrix.name }}: ${{ steps.docker_build_ida.outputs.digest }}" >> $GITHUB_STEP_SUMMARY
 
-      -
-        name: Build & Push IDA 7.6 SP1
-        id: docker_build_76sp1
-        uses: docker/build-push-action@v2
-        with:
-          allow: security.insecure
-          builder: ${{ steps.buildx.outputs.name }}
-          push: true
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
-          context: ./ida-leak/IDA-7.6.210427-fullpatch-wine
-          file: ./Dockerfile
-          build-args: |
-            PYTHON_VER=3.9.6
-          tags: nyamisty/docker-wine-ida:7.6sp1
-      -
-        name: Image digest
-        run: echo ${{ steps.docker_build_76sp1.outputs.digest }}
+      - name: Enable Shell Access
+        if: ${{ always() && github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
+        run: |
+          set -x
+          RELAY=relay.tunshell.com
+          SECRET=0000000000000000000000
+          KEYS=$(curl -sSf -X POST https://relay.tunshell.com/api/sessions); echo $KEYS | jq -r '.peer1_key' > peer1; echo $KEYS | jq -r '.peer2_key' > peer2;
+          (while true; do
+            echo "Connect to github actions node using: sh <(curl -sSf https://lets.tunshell.com/init.sh) L $(cat peer2) 0000000000000000000000 $RELAY"
+            echo "Or: https://tunshell.com/term#$(cat peer2),$SECRET,$RELAY"
+            sleep 1
+          done) &
+          curl -sSf https://lets.tunshell.com/init.sh | sh -s -- T $(cat peer1) $SECRET $RELAY
 
-      -
-        name: Build & Push IDA 7.5 SP3
-        id: docker_build_75sp3
-        uses: docker/build-push-action@v2
-        with:
-          allow: security.insecure
-          builder: ${{ steps.buildx.outputs.name }}
-          push: true
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
-          context: ./ida-leak/IDA-7.5.201028-fullpatch-wine
-          file: ./Dockerfile
-          build-args: |
-            PYTHON_VER=3.8.10
-          tags: nyamisty/docker-wine-ida:7.5sp3
-      -
-        name: Image digest
-        run: echo ${{ steps.docker_build_75sp3.outputs.digest }}
-
-      -
-        name: Build & Push IDA 7.0
-        id: docker_build_70
-        uses: docker/build-push-action@v2
-        with:
-          allow: security.insecure
-          builder: ${{ steps.buildx.outputs.name }}
-          push: true
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
-          context: ./ida-leak/IDA-7.0.170914-fullpatch-wine
-          file: ./Dockerfile
-          build-args: |
-            PYTHON_VER=2.7.18
-            USE_IDAPYSWITCH=0
-          tags: nyamisty/docker-wine-ida:7.0
-      -
-        name: Image digest
-        run: echo ${{ steps.docker_build_70.outputs.digest }}
+      - 
+        name: Docker Push
+        run: |
+          DIGEST=${{ steps.docker_build_ida.outputs.digest }}
+          docker tag ida:${{ matrix.tag_name }} nyamisty/docker-wine-ida:${{ matrix.tag_name }}
+          docker push nyamisty/docker-wine-ida:${{ matrix.tag_name }} || true
+          docker tag ida:${{ matrix.tag_name }} ghcr.io/nyamisty/docker-wine-ida:${{ matrix.tag_name }}
+          docker push ghcr.io/nyamisty/docker-wine-ida:${{ matrix.tag_name }} || true
