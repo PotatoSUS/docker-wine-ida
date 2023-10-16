@@ -78,7 +78,7 @@ All these examples spins up a jupyter server. Add command to the end if you want
 ## Credits
 - Prebuilted versions are leaked IDA Pro 7.0/7.5sp3/7.6sp1
     - IDA 7.0: https://down.52pojie.cn/Tools/Disassemblers/IDA.txt
-    - IDA 7.5 & 7.6: https://fuckilfakp5d6a5t.onion (now migrated to https://fckilfkscwusoopguhi7i6yg3l6tknaz7lrumvlhg5mvtxzxbbxlimid.onion)
+    - IDA 7.5 & 7.6: https://fuckilfakp5d6a5t.onion (now migrated to http://fckilfkscwusoopguhi7i6yg3l6tknaz7lrumvlhg5mvtxzxbbxlimid.onion)
     - IDA 7.7: Dr.Far-Far
 - IPyIDA built by eset and adapted by me
 - Thanks scottyhardy/docker-wine for Wine's docker image
